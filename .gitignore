@@ -1,0 +1,95 @@
+# ==========================================
+# Python
+# ==========================================
+
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# ==========================================
+# Environment
+# ==========================================
+
+.env
+
+# ==========================================
+# Jupyter
+# ==========================================
+
+.ipynb_checkpoints/
+
+# ==========================================
+# Data
+# ==========================================
+
+data/raw/*
+data/processed/*
+data/annotations/*
+data/samples/*
+
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/annotations/.gitkeep
+!data/samples/.gitkeep
+
+# ==========================================
+# Model weights
+# ==========================================
+
+models/**/*.pt
+models/**/*.pth
+models/**/*.onnx
+models/**/*.engine
+models/**/*.safetensors
+*.pt
+*.pth
+*.onnx
+
+# ==========================================
+# Outputs
+# ==========================================
+
+outputs/detections/*
+outputs/incidents/*
+outputs/reports/*
+outputs/logs/*
+
+!outputs/detections/.gitkeep
+!outputs/incidents/.gitkeep
+!outputs/reports/.gitkeep
+!outputs/logs/.gitkeep
+
+# ==========================================
+# IDE
+# ==========================================
+
+.vscode/
+.idea/
+
+# ==========================================
+# OS
+# ==========================================
+
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ==========================================
+# Logs
+# ==========================================
+
+*.log
+
+# ==========================================
+# Temporary
+# ==========================================
+
+*.tmp
+*.temp
+*.bak

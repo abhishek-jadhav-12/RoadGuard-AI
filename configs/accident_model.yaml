@@ -1,0 +1,22 @@
+model:
+  architecture: "cnn_lstm"
+  input_frames: 32
+  image_size: 224
+  num_classes: 2
+
+classes:
+  0: "normal"
+  1: "accident"
+
+training:
+  batch_size: 8
+  epochs: 30
+  learning_rate: 0.0001
+  weight_decay: 0.0001
+
+optimization:
+  early_stopping_patience: 5
+
+paths:
+  checkpoint: "models/accident/best_model.pth"
+  

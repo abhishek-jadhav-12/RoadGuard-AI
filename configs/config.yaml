@@ -1,0 +1,49 @@
+project:
+  name: "RoadGuard-AI"
+  version: "0.1.0"
+  environment: "development"
+
+paths:
+  data_dir: "data"
+  raw_data: "data/raw"
+  processed_data: "data/processed"
+  annotations: "data/annotations"
+  models: "models"
+  outputs: "outputs"
+
+video:
+  input_source: "data/samples/test_video.mp4"
+  target_fps: 15
+  frame_width: 1280
+  frame_height: 720
+
+detection:
+  confidence_threshold: 0.40
+  iou_threshold: 0.50
+
+tracking:
+  tracker: "bytetrack.yaml"
+  max_age: 30
+
+accident:
+  probability_threshold: 0.70
+  confirmation_frames: 5
+
+severity:
+  levels:
+    - LOW
+    - MEDIUM
+    - HIGH
+    - CRITICAL
+
+database:
+  url: "sqlite:///./roadguard.db"
+
+api:
+  host: "127.0.0.1"
+  port: 8000
+
+dashboard:
+  title: "RoadGuard AI"
+  port: 8501
+  

@@ -1,0 +1,22 @@
+model:
+  name: "yolo11n.pt"
+
+classes:
+  - person
+  - bicycle
+  - car
+  - motorcycle
+  - bus
+  - truck
+
+inference:
+  confidence: 0.40
+  iou: 0.50
+  image_size: 640
+
+device:
+  type: "auto"
+
+tracking:
+  enabled: true
+  tracker: "bytetrack.yaml"
