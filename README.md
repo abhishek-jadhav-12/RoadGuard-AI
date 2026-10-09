@@ -1,209 +1,223 @@
-# RoadGuard AI
+# RoadGuard-AI
 
-### Real-Time AI Road Accident Detection & Emergency Intelligence System
+**AI-Powered Road Accident Detection & Emergency Intelligence System**
 
-RoadGuard AI is a multimodal artificial intelligence system designed to detect
-potential road accidents from video streams, analyze vehicle interactions,
-estimate incident severity, generate evidence, and produce structured incident
-reports.
+RoadGuard-AI is a portfolio project exploring how computer vision,
+object tracking, temporal deep learning, and incident intelligence can
+be combined to analyze road-scene videos. The current implementation
+establishes the dataset-inspection workflow and a working YOLO-based
+object-detection and ByteTrack tracking prototype.
 
-The project combines computer vision, deep learning, multi-object tracking,
-natural language processing (NLP), optical character recognition (OCR),
-retrieval-augmented generation (RAG), FastAPI, Streamlit, and production-oriented
-ML engineering.
+> **Current status:** Dataset inspection and initial EDA are complete.
+> YOLO object detection, detection-statistics export, and a ByteTrack
+> tracking prototype have been run successfully on a sample CCD video.
+> Accident classification, severity estimation, RAG assistance, and
+> real-time alerting are planned work---not yet implemented as complete
+> features.
 
----
+## Project goals
 
-## Project Status
+-   Detect road users in video frames.
+-   Track detected road users across consecutive frames.
+-   Extract object trajectories and motion features.
+-   Build a temporal accident-detection model.
+-   Estimate incident severity as an experimental model output.
+-   Capture incident evidence and generate structured reports.
+-   Provide an API and dashboard for reviewing incidents.
+-   Evaluate performance, document limitations, and package the
+    application for reproducible use.
 
-🚧 Under active development
+## Current implementation status
 
-Current version: `0.1.0`
+  -----------------------------------------------------------------------
+  Component               Status                  Notes
+  ----------------------- ----------------------- -----------------------
+  Python project          Complete                Python 3.12 virtual
+  environment                                     environment;
+                                                  dependencies installed
+                                                  as needed
 
----
+  Project structure and   Complete                Source modules,
+  configuration                                   scripts, configs,
+                                                  tests, and
+                                                  documentation folders
+                                                  created
 
-## Vision
+  FastAPI foundation      Complete                Root and health
+                                                  endpoints are available
 
-The goal of RoadGuard AI is to build an end-to-end intelligent road monitoring
-system capable of:
+  Streamlit dashboard     Complete                Initial status
+  foundation                                      dashboard scaffold
 
-- Detecting vehicles and pedestrians
-- Tracking road objects across frames
-- Identifying potential collisions
-- Recognizing accident events from temporal video information
-- Estimating accident severity
-- Extracting relevant visual information
-- Generating structured incident reports
-- Providing an emergency-response knowledge assistant
-- Visualizing incidents through a monitoring dashboard
-- Exposing the AI pipeline through REST APIs
+  CCD dataset inspection  Complete                Verified 1,500 crash
+                                                  videos and 3,000 normal
+                                                  videos in the expected
+                                                  folders
 
----
+  Sample video validation Complete                Sample checked at 50
+                                                  frames, 10 FPS, 1280 ×
+                                                  720, approximately 5
+                                                  seconds
 
-## System Architecture
+  CCD annotation parsing  Complete                Metadata-generation
+  and metadata CSV                                script and EDA workflow
+                                                  prepared
 
-```text
-Camera / Video
-      |
-      v
-OpenCV Video Processing
-      |
-      v
-YOLO Object Detection
-      |
-      v
-ByteTrack Multi-Object Tracking
-      |
-      +-------------------+
-      |                   |
-      v                   v
-Motion Analysis      Scene Analysis
-      |                   |
-      +---------+---------+
-                |
-                v
-        Temporal DL Model
-          CNN + LSTM
-                |
-                v
-      Accident Probability
-                |
-                v
-       Collision Reasoning
-                |
-                v
-       Severity Estimation
-                |
-        +-------+-------+
-        |               |
-        v               v
-       OCR          Scene Metadata
-        |               |
-        +-------+-------+
-                |
-                v
-             NLP / LLM
-                |
-                v
-       RAG Emergency Assistant
-                |
-                v
-        Incident Report
-                |
-        +-------+-------+
-        |               |
-        v               v
-     FastAPI         Streamlit
-        |               |
-        +-------+-------+
-                |
-                v
-          Incident Store
+  Initial dataset EDA     Complete                Notebook created and
+                                                  run; metadata parsing
+                                                  was corrected during
+                                                  setup
+
+  YOLO11n object          Working prototype       Processes a sample
+  detection                                       video and saves
+                                                  annotated output
+
+  Detection statistics    Working prototype       Exports per-frame CSV
+                                                  and JSON summary
+
+  ByteTrack multi-object  Working prototype       Tracks objects and
+  tracking                                        exports road-object
+                                                  detections with frame,
+                                                  ID, class, confidence,
+                                                  and bounding-box
+                                                  coordinates
+
+  Trajectory and motion   Planned                 Next development task
+  feature extraction                              
+
+  CNN + LSTM accident     Planned                 Not yet trained or
+  classification                                  evaluated
+
+  Collision reasoning and Planned                 Requires motion
+  severity estimation                             features and validation
+
+  OCR and incident report Planned                 Not yet integrated
+  generation                                      
+
+  RAG emergency-response  Planned                 Not yet integrated
+  assistant                                       
+
+  Incident database and   Planned                 Database
+  evidence management                             schema/integration work
+                                                  remains
+
+  Complete FastAPI +      In progress             Foundations exist; AI
+  Streamlit workflow                              pipeline integration
+                                                  remains
+
+  ONNX optimization,      Planned                 Validate after the
+  Docker, CI/CD hardening                         pipeline is integrated
+  -----------------------------------------------------------------------
+
+## Architecture roadmap
+
+``` text
+Road video / webcam / future RTSP source
+                  |
+                  v
+          OpenCV video input
+                  |
+                  v
+           YOLO object detection
+                  |
+                  v
+          ByteTrack object tracking
+                  |
+                  v
+       Trajectories and motion features
+                  |
+                  v
+       Temporal accident classification
+                  |
+                  v
+   Collision reasoning and severity estimate
+                  |
+                  v
+       Evidence and incident metadata
+                  |
+          +-------+--------+
+          |                |
+          v                v
+    NLP incident report   RAG assistant
+          |                |
+          +-------+--------+
+                  |
+                  v
+        Database / FastAPI / Dashboard
+                  |
+                  v
+       Simulated alert and incident review
 ```
 
----
+The diagram represents the intended architecture. Only the components
+explicitly marked as implemented in the status table should be
+considered currently available.
 
-## Core Technologies
+## Technology stack
 
-| Area | Technologies |
-| --- | --- |
-| Computer vision | OpenCV, YOLO |
-| Object tracking | ByteTrack |
-| Deep learning | PyTorch, CNN, LSTM, temporal video modeling |
-| NLP and RAG | Transformers, LLMs, Sentence Transformers |
-| OCR | EasyOCR |
-| Backend | FastAPI, Pydantic, SQLAlchemy |
-| Dashboard | Streamlit, Plotly |
-| Database | SQLite for development; PostgreSQL for production |
-| Deployment and optimization | Docker, ONNX, GitHub Actions |
+-   **Language:** Python 3.12
+-   **Computer vision:** OpenCV
+-   **Object detection:** Ultralytics YOLO11n pretrained model
+-   **Object tracking:** ByteTrack through Ultralytics tracking
+-   **Data processing:** Pandas, NumPy
+-   **Visualization / dashboard:** Matplotlib, Streamlit, Plotly
+-   **API:** FastAPI, Uvicorn, Pydantic
+-   **Database:** SQLAlchemy (integration work pending)
+-   **Deep learning:** PyTorch, torchvision (temporal model planned)
+-   **NLP / RAG / OCR:** Transformers, Sentence Transformers, ChromaDB,
+    EasyOCR (planned integration)
+-   **Testing / quality:** pytest, Black, Ruff
+-   **Packaging / automation:** Docker and GitHub Actions (initial CI
+    workflow scaffolded)
 
----
+## Dataset
 
-## Main Components
+The initial dataset is the **Car Crash Dataset (CCD)** from the
+[official repository](https://github.com/Cogito2012/CarCrashDataset).
 
-### 1. Object Detection
+The local setup currently expects this layout:
 
-Detects road objects such as cars, motorcycles, buses, trucks, bicycles, and
-people.
+``` text
+data/
+├── raw/
+│   └── CCD/
+│       ├── videos/
+│       │   ├── Normal/
+│       │   └── Crash-1500/
+│       └── Crash-1500.txt
+├── processed/
+│   └── ccd_metadata.csv
+├── annotations/
+└── samples/
+```
 
-### 2. Multi-Object Tracking
+Dataset notes:
 
-Tracks objects across video frames and maintains persistent IDs.
+-   The dataset is used for accident-video research and experimentation.
+-   The metadata CSV currently describes the crash-video annotations; it
+    does **not** by itself represent every normal video.
+-   Keep downloaded datasets out of Git. The repository `.gitignore`
+    should exclude raw/processed dataset files and generated model
+    weights.
+-   Before training, create train/validation/test splits **by video**,
+    never by randomly distributing frames from the same video across
+    splits.
+-   Review the official dataset license/terms and attribution
+    requirements before redistribution or publication.
 
-### 3. Accident Detection
+## Repository structure
 
-A temporal deep-learning model analyzes sequences of frames rather than
-individual images.
-
-### 4. Collision Reasoning
-
-Vehicle trajectories, relative motion, proximity, bounding-box overlap, and
-temporal evidence are combined to estimate collision likelihood.
-
-### 5. Severity Estimation
-
-Potential incidents are classified as `LOW`, `MEDIUM`, `HIGH`, or `CRITICAL`.
-
-### 6. Incident Intelligence
-
-Detected incidents can include:
-
-- Incident ID and timestamp
-- Evidence frames and a short video clip
-- Detection and tracking information
-- Accident confidence
-- Severity estimate
-
-### 7. NLP Incident Reporting
-
-Converts structured incident information into a human-readable report.
-
-### 8. RAG Emergency Assistant
-
-Provides grounded responses using an emergency-response knowledge base.
-
-### 9. API
-
-FastAPI exposes the AI pipeline through REST endpoints.
-
-### 10. Dashboard
-
-Streamlit provides:
-
-- Live monitoring
-- Incident history and details
-- Analytics
-- AI-generated reports
-- System health
-
----
-
-## Project Structure
-
-```text
+``` text
 RoadGuard-AI/
-├── .github/
-│   └── workflows/
-│       └── ci.yml
+├── .github/workflows/ci.yml
 ├── api/
 ├── configs/
 ├── dashboard/
 ├── data/
-│   ├── annotations/
-│   ├── processed/
-│   ├── raw/
-│   └── samples/
 ├── docs/
 ├── models/
-│   ├── accident/
-│   ├── detection/
-│   └── severity/
 ├── notebooks/
 ├── outputs/
-│   ├── detections/
-│   ├── incidents/
-│   ├── logs/
-│   └── reports/
 ├── scripts/
 ├── src/
 │   ├── accident/
@@ -221,132 +235,192 @@ RoadGuard-AI/
 ├── Dockerfile
 ├── LICENSE
 ├── README.md
-├── pyproject.toml
-└── requirements.txt
+├── requirements.txt
+└── pyproject.toml
 ```
 
----
+## Setup
 
-## Datasets
+These instructions assume Windows PowerShell and that the repository is
+located at `D:\Nooral\RoadGuard-AI`. Adjust the path for your machine.
 
-Planned datasets include:
+``` powershell
+cd D:\Nooral\RoadGuard-AI
 
-- ACCIDENT
-- Car Crash Dataset
-- BDD100K
-- UCF-Crime
-- TUMTraf-Accid3D
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
 
-Datasets will not be committed directly to this repository. Refer to
-[`docs/dataset.md`](docs/dataset.md) for dataset preparation instructions.
+python -m pip install --upgrade pip
+pip install -r requirements.txt
 
----
+# Notebook support, if needed
+python -m pip install ipykernel jupyter
+```
 
-## Development Roadmap
+If the environment already exists and works, do not recreate it
+unnecessarily.
 
-### Phase 1 — Foundation
+## Run the application foundations
 
-- Repository structure
-- Python environment
-- Configuration system
-- Logging
-- FastAPI foundation
-- Streamlit foundation
-- CI testing
+### FastAPI
 
-### Phase 2 — Computer Vision
+``` powershell
+uvicorn api.main:app --reload
+```
 
-- YOLO integration
-- Road object detection
-- Video processing
-- Detection benchmarking
+-   API root: `http://127.0.0.1:8000/`
+-   Health check: `http://127.0.0.1:8000/health`
+-   Interactive API docs: `http://127.0.0.1:8000/docs`
 
-### Phase 3 — Tracking
+### Streamlit dashboard
 
-- ByteTrack
-- Object trajectories
-- Motion feature extraction
+``` powershell
+streamlit run dashboard/app.py
+```
 
-### Phase 4 — Deep Learning
+## Run the current computer-vision pipeline
 
-- Accident dataset preprocessing
-- CNN + LSTM model
-- Training pipeline
-- Evaluation
-- Model comparison
+Activate the project virtual environment first.
 
-### Phase 5 — Accident Intelligence
+### 1. Inspect CCD folders and video counts
 
-- Collision reasoning
-- Accident confidence fusion
-- Severity estimation
-- False-positive reduction
+``` powershell
+python scripts\inspect_ccd.py
+```
 
-### Phase 6 — Multimodal AI
+### 2. Inspect a sample video
 
-- OCR
-- Evidence extraction
-- NLP incident reports
-- LLM integration
+``` powershell
+python scripts\check_video.py
+```
 
-### Phase 7 — RAG
+### 3. Build CCD annotation metadata
 
-- Emergency knowledge base
-- Embeddings
-- Vector database
-- Retrieval pipeline
-- Grounded assistant
+``` powershell
+python scripts\build_ccd_metadata.py
+```
 
-### Phase 8 — Application
+Expected output:
 
-- Database
-- FastAPI
-- Streamlit dashboard
-- Incident management
-- Analytics
+``` text
+data/processed/ccd_metadata.csv
+```
 
-### Phase 9 — Production
+### 4. Run the EDA notebook
 
-- Docker
-- Testing
-- Logging
-- ONNX optimization
-- Performance benchmarking
-- CI/CD
+Open `notebooks/01_dataset_analysis.ipynb` in VS Code and select the
+project `.venv` kernel.
 
-### Phase 10 — Deployment
+### 5. Run YOLO detection
 
-- Cloud deployment
-- Demo environment
-- Documentation
-- Architecture diagram
-- Demo video
+``` powershell
+python scripts\run_detection.py
+```
 
----
+The script uses the pretrained `yolo11n.pt` model and saves annotated
+video output under:
 
-## Safety & Limitations
+``` text
+outputs/detections/ccd_sample/
+```
 
-RoadGuard AI is a research and portfolio project. It is not a certified
-emergency-dispatch or medical decision-making system.
+The first run may download the model weights.
 
-AI-generated severity estimates and response recommendations should not be
-treated as authoritative emergency instructions.
+### 6. Evaluate detection statistics
 
-Real-world deployment would require extensive validation, privacy controls,
-regulatory compliance, human oversight, and integration with authorized
-emergency infrastructure.
+``` powershell
+python scripts\evaluate_detection.py
+```
 
----
+Outputs include:
 
-## License
+``` text
+outputs/detections/evaluation/
+├── per_frame_detections.csv
+├── detection_summary.json
+└── annotated_video/
+```
 
-MIT License
+These are inference statistics, not ground-truth detection accuracy or
+mAP.
 
----
+### 7. Run ByteTrack
+
+``` powershell
+python scripts\run_tracking.py
+```
+
+Outputs include:
+
+``` text
+outputs/detections/tracking/
+├── tracking_results.csv
+├── tracking_summary.json
+└── tracked_video/
+```
+
+The CSV stores frame numbers, track IDs where available, class labels,
+confidence scores, bounding boxes, and box centers. Track IDs can be
+lost or switched; these initial results are not a validated
+tracking-accuracy benchmark.
+
+## Next development milestones
+
+1.  **Trajectory and motion features:** compute per-track center
+    movement, speed proxies, direction changes, and track continuity.
+2.  **Collision reasoning:** explore trajectory intersections, relative
+    motion, bounding-box overlap, and deceleration cues.
+3.  **Temporal accident model:** prepare video-level splits and
+    train/evaluate a lightweight CNN + LSTM baseline.
+4.  **Evaluation:** report precision, recall, F1, PR-AUC/ROC-AUC where
+    appropriate, and false-positive examples.
+5.  **Incident workflow:** combine model output, evidence frames,
+    incident metadata, and an experimental severity estimate.
+6.  **NLP / OCR / RAG:** add grounded incident summaries and a
+    retrieval-based emergency information assistant.
+7.  **Application integration:** connect the pipeline to the database,
+    FastAPI, and Streamlit.
+8.  **Production readiness:** tests, logs, Docker, ONNX benchmarks, CI,
+    and deployment documentation.
+
+## Evaluation principles
+
+-   Split datasets at the **video level** to avoid frame leakage.
+-   Do not treat repeated detections across frames as unique vehicles.
+-   Do not equate model confidence with prediction correctness.
+-   Evaluate on held-out videos and inspect false positives and false
+    negatives.
+-   Report limitations and benchmark settings alongside metrics.
+-   Test across varied lighting, weather, camera angles, and road
+    conditions before making reliability claims.
+
+## Safety, privacy, and limitations
+
+RoadGuard-AI is an educational and research prototype. It is **not a
+certified road-safety or emergency-dispatch system**. Model predictions
+may be wrong, and the current object-detection and tracking pipeline
+does not itself establish that an accident occurred.
+
+Any future severity estimate or emergency recommendation must be clearly
+presented as experimental and reviewed by a human. The project should
+use simulated alerts unless a separately validated, authorized
+integration is developed. Handle video evidence and any identifiable
+information lawfully, securely, and with appropriate privacy safeguards.
+
+## Contributing
+
+Issues and pull requests are welcome. Keep datasets, secrets, local
+databases, model weights, and generated outputs out of Git unless there
+is a deliberate, documented reason to include a small sample artifact.
 
 ## Author
 
-Abhishek Jadhav
+**Abhishek Jadhav**
 
-Built as an end-to-end AI/ML engineering project combining computer vision,
-deep learning, NLP, RAG, and MLOps.
+-   GitHub: [abhishek-jadhav-12](https://github.com/abhishek-jadhav-12)
+-   LinkedIn: add your preferred public profile URL here
+
+------------------------------------------------------------------------
+
+*Project status reflects the current development checkpoint and should
+be updated as features are implemented and validated.*
