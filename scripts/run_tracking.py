@@ -21,7 +21,7 @@ VIDEO_PATH = (
     / "CCD"
     / "videos"
     / "Crash-1500"
-    / "000001.mp4"
+    / "000004.mp4"
 )
 
 OUTPUT_DIR = PROJECT_ROOT / "outputs" / "detections" / "tracking"
