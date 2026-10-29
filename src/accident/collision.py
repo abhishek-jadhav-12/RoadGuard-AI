@@ -107,6 +107,27 @@ def analyze_collision_candidates(
             box_b = [second["x1"], second["y1"], second["x2"], second["y2"]]
             iou = calculate_iou(box_a, box_b)
 
+            # Check whether two different class labels may describe
+            # the same physical vehicle.
+            class_a = str(first["class_name"]).strip().lower()
+            class_b = str(second["class_name"]).strip().lower() 
+
+            width_a = max(0.0, float(first["x2"] - first["x1"]))
+            height_a = max(0.0, float(first["y2"] - first["y1"]))
+            width_b = max(0.0, float(second["x2"] - second["x1"]))
+            height_b = max(0.0, float(second["y2"] - second["y1"]))
+
+            diagonal_a = float(np.hypot(width_a, height_a))
+            diagonal_b = float(np.hypot(width_b, height_b))
+            mean_box_diagonal = max((diagonal_a + diagonal_b) / 2.0, 1.0)
+
+            relative_center_distance = center_distance / mean_box_diagonal
+
+            possible_duplicate_detection = (
+                class_a != class_b
+                and iou >= 0.90
+                and relative_center_distance <= 0.10
+            )
             previous = previous_pair_distance.get(pair_key)
             closing_speed = np.nan
 
@@ -156,13 +177,17 @@ def analyze_collision_candidates(
             )
 
            
-            # Flag strong overlap for review even when motion evidence is unavailable.
+                # Do not count likely duplicate-class detections as collisions.
+                # Keep the duplicate flag so these cases can be investigated.
             strong_overlap = iou >= 0.70
 
             candidate = (
-                strong_overlap
-                or (boxes_overlap and closing)
-                or (is_close and closing)
+                not possible_duplicate_detection
+                and (
+                    strong_overlap
+                    or (boxes_overlap and closing)
+                    or (is_close and closing)
+                )
             )
 
 
@@ -181,6 +206,7 @@ def analyze_collision_candidates(
                 "is_closing": bool(closing),
                 "candidate_score": score,
                 "potential_collision_candidate": bool(candidate),
+                "possible_duplicate_detection": bool(possible_duplicate_detection),
             })
 
     return pd.DataFrame(records)
