@@ -7,7 +7,7 @@ from ultralytics import YOLO
 class RoadObjectDetector:
     """YOLO-based road object detector."""
 
-    def __init__(self, model_path: str = "yolo11n.pt"):
+    def __init__(self, model_path: str = "yolo26n.pt"):
         self.model_path = Path(model_path)
         self.model = YOLO(str(self.model_path))
 

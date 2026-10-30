@@ -1,44 +1,112 @@
-
 from pathlib import Path
-import cv2
 
-ROOT = Path(__file__).resolve().parents[1]
+import pandas as pd
 
-VIDEO_PATH = (
-    ROOT / "data" / "raw" / "CCD" / "videos"
-    / "Crash-1500" / "000004.mp4"
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+TRACKING_CSV = (
+    PROJECT_ROOT
+    / "outputs"
+    / "detections"
+    / "tracking"
+    / "tracking_results.csv"
 )
 
-OUTPUT_DIR = ROOT / "outputs" / "incidents" / "frame_inspection"
-OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+OUTPUT_CSV = (
+    PROJECT_ROOT
+    / "outputs"
+    / "detections"
+    / "tracking"
+    / "trajectory_analysis"
+    / "collision_frame_details.csv"
+)
 
-# Inspect a short window around the flagged frame.
-TARGET_FRAMES = range(27, 34)
 
-cap = cv2.VideoCapture(str(VIDEO_PATH))
+def main():
+    if not TRACKING_CSV.exists():
+        raise FileNotFoundError(
+            f"Tracking CSV not found: {TRACKING_CSV}"
+        )
 
-if not cap.isOpened():
-    raise RuntimeError(f"Could not open video: {VIDEO_PATH}")
+    df = pd.read_csv(TRACKING_CSV)
 
-fps = cap.get(cv2.CAP_PROP_FPS)
-total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    required_columns = {
+        "frame",
+        "track_id",
+        "class_name",
+        "confidence",
+        "center_x",
+        "center_y",
+    }
 
-print(f"Video: {VIDEO_PATH.name}")
-print(f"FPS: {fps:.2f}")
-print(f"Total frames: {total_frames}")
+    missing = required_columns - set(df.columns)
 
-for frame_number in TARGET_FRAMES:
-    # OpenCV uses zero-based frame indices.
-    cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number - 1)
-    success, frame = cap.read()
+    if missing:
+        raise ValueError(
+            f"Missing required columns: {sorted(missing)}"
+        )
 
-    if not success:
-        print(f"Could not read frame {frame_number}")
-        continue
+    df["frame"] = pd.to_numeric(
+        df["frame"],
+        errors="coerce",
+    )
 
-    output_path = OUTPUT_DIR / f"frame_{frame_number:04d}.jpg"
-    cv2.imwrite(str(output_path), frame)
-    print(f"Saved: {output_path}")
+    df["track_id"] = pd.to_numeric(
+        df["track_id"],
+        errors="coerce",
+    )
 
-cap.release()
-print("Frame inspection images saved.")
+    # Inspect a small window around the suspicious frame.
+    window = df[
+        df["frame"].between(28, 32)
+    ].copy()
+
+    if window.empty:
+        print("No detections found in frames 28-32.")
+        return
+
+    columns = [
+        "frame",
+        "track_id",
+        "class_name",
+        "confidence",
+        "center_x",
+        "center_y",
+    ]
+
+    # Include bounding boxes when available.
+    for column in [
+        "x1",
+        "y1",
+        "x2",
+        "y2",
+        "bbox_x1",
+        "bbox_y1",
+        "bbox_x2",
+        "bbox_y2",
+    ]:
+        if column in window.columns:
+            columns.append(column)
+
+    window = window[columns].sort_values(
+        ["frame", "track_id"]
+    )
+
+    print("\n========== FRAMES 28-32 ==========")
+    print(window.to_string(index=False))
+
+    OUTPUT_CSV.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    window.to_csv(
+        OUTPUT_CSV,
+        index=False,
+    )
+
+    print(f"\nSaved diagnostic CSV: {OUTPUT_CSV}")
+
+
+if __name__ == "__main__":
+    main()

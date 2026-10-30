@@ -34,7 +34,7 @@ def main():
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    print("Loading YOLO11n + ByteTrack...")
+    print("Loading YOLO26n + ByteTrack...")
     tracker = RoadObjectTracker()
 
     rows = []
@@ -44,7 +44,7 @@ def main():
     results = tracker.track_video(
         VIDEO_PATH,
         confidence=0.40,
-        image_size=640,
+        image_size=960,
         save=True,
         output_dir=str(OUTPUT_DIR),
     )
@@ -67,6 +67,12 @@ def main():
             xyxy, class_ids, confidences, track_ids
         ):
             class_name = result.names[int(class_id)]
+            if class_name == "truck":
+                print(
+                    f"Truck prediction | Frame: {frame_number} | "
+                    f"Track ID: {track_id} | "
+                    f"Confidence: {confidence:.3f}"
+                )
 
             if class_name not in ROAD_CLASSES:
                 continue

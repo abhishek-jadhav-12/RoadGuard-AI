@@ -1,4 +1,3 @@
-
 from itertools import combinations
 
 import numpy as np
@@ -50,6 +49,7 @@ def analyze_collision_candidates(
     Generate heuristic potential-collision candidates for one video.
 
     Distances and closing speeds are measured in image coordinates.
+    Candidate scores are heuristic values, not probabilities.
     A candidate is not a confirmed collision or accident.
     """
     missing = REQUIRED_COLUMNS - set(detections.columns)
@@ -61,20 +61,37 @@ def analyze_collision_candidates(
     if fps <= 0 or frame_width <= 0 or frame_height <= 0:
         raise ValueError("FPS and frame dimensions must be positive.")
 
+    if proximity_threshold <= 0:
+        raise ValueError("proximity_threshold must be positive.")
+
+    if overlap_threshold < 0 or overlap_threshold > 1:
+        raise ValueError("overlap_threshold must be between 0 and 1.")
+
+    if min_closing_speed_px_s < 0:
+        raise ValueError("min_closing_speed_px_s cannot be negative.")
+
     df = detections.copy()
 
     numeric_columns = [
-        "frame", "track_id", "x1", "y1", "x2", "y2",
-        "center_x", "center_y",
+        "frame",
+        "track_id",
+        "x1",
+        "y1",
+        "x2",
+        "y2",
+        "center_x",
+        "center_y",
     ]
+
     for column in numeric_columns:
         df[column] = pd.to_numeric(df[column], errors="coerce")
 
     df = df.dropna(subset=numeric_columns + ["class_name"])
     df = df.drop_duplicates(subset=["frame", "track_id"])
 
-    # Use the frame diagonal to normalize image-space center distance.
     frame_diagonal = float(np.hypot(frame_width, frame_height))
+
+    # Track the last observed distance for each object pair.
     previous_pair_distance = {}
     records = []
 
@@ -88,7 +105,7 @@ def analyze_collision_candidates(
             if id_a == id_b:
                 continue
 
-            # Canonical ordering keeps the same pair key across frames.
+            # Canonical ordering makes the pair key consistent.
             if str(id_a) <= str(id_b):
                 first, second = obj_a, obj_b
             else:
@@ -100,17 +117,23 @@ def analyze_collision_candidates(
 
             dx = float(second["center_x"] - first["center_x"])
             dy = float(second["center_y"] - first["center_y"])
+
             center_distance = float(np.hypot(dx, dy))
             normalized_distance = center_distance / frame_diagonal
 
-            box_a = [first["x1"], first["y1"], first["x2"], first["y2"]]
-            box_b = [second["x1"], second["y1"], second["x2"], second["y2"]]
+            box_a = [
+                first["x1"], first["y1"],
+                first["x2"], first["y2"],
+            ]
+            box_b = [
+                second["x1"], second["y1"],
+                second["x2"], second["y2"],
+            ]
+
             iou = calculate_iou(box_a, box_b)
 
-            # Check whether two different class labels may describe
-            # the same physical vehicle.
             class_a = str(first["class_name"]).strip().lower()
-            class_b = str(second["class_name"]).strip().lower() 
+            class_b = str(second["class_name"]).strip().lower()
 
             width_a = max(0.0, float(first["x2"] - first["x1"]))
             height_a = max(0.0, float(first["y2"] - first["y1"]))
@@ -119,56 +142,65 @@ def analyze_collision_candidates(
 
             diagonal_a = float(np.hypot(width_a, height_a))
             diagonal_b = float(np.hypot(width_b, height_b))
-            mean_box_diagonal = max((diagonal_a + diagonal_b) / 2.0, 1.0)
+            mean_box_diagonal = max(
+                (diagonal_a + diagonal_b) / 2.0,
+                1.0,
+            )
 
-            relative_center_distance = center_distance / mean_box_diagonal
+            relative_center_distance = (
+                center_distance / mean_box_diagonal
+            )
 
+            # This is a suspicious duplicate, not a proven duplicate.
             possible_duplicate_detection = (
                 class_a != class_b
                 and iou >= 0.90
                 and relative_center_distance <= 0.10
             )
+
             previous = previous_pair_distance.get(pair_key)
             closing_speed = np.nan
 
             if previous is not None:
                 previous_frame, previous_distance = previous
-                elapsed_seconds = (frame_number - previous_frame) / fps
+                elapsed_seconds = (
+                    float(frame_number) - previous_frame
+                ) / fps
 
                 if elapsed_seconds > 0:
-                    # Positive means the centers are getting closer.
                     closing_speed = (
                         previous_distance - center_distance
                     ) / elapsed_seconds
 
             previous_pair_distance[pair_key] = (
-                frame_number,
+                float(frame_number),
                 center_distance,
             )
 
             is_close = normalized_distance <= proximity_threshold
             boxes_overlap = iou >= overlap_threshold
+
             closing = (
                 pd.notna(closing_speed)
                 and closing_speed >= min_closing_speed_px_s
             )
 
-            # Transparent heuristic score, not a calibrated probability.
             proximity_score = max(
                 0.0,
                 1.0 - normalized_distance / proximity_threshold,
-            ) if proximity_threshold > 0 else 0.0
+            )
 
-            closing_score = (
-                min(
-                    max(closing_speed, 0.0)
+            if (
+                pd.notna(closing_speed)
+                and min_closing_speed_px_s > 0
+            ):
+                closing_score = min(
+                    max(float(closing_speed), 0.0)
                     / (2 * min_closing_speed_px_s),
                     1.0,
                 )
-                if pd.notna(closing_speed)
-                and min_closing_speed_px_s > 0
-                else 0.0
-            )
+            else:
+                closing_score = 0.0
 
             score = (
                 0.45 * min(iou, 1.0)
@@ -176,11 +208,10 @@ def analyze_collision_candidates(
                 + 0.20 * closing_score
             )
 
-           
-                # Do not count likely duplicate-class detections as collisions.
-                # Keep the duplicate flag so these cases can be investigated.
             strong_overlap = iou >= 0.70
 
+            # Require meaningful spatial evidence. Strong overlap is
+            # retained for review unless the pair looks like a duplicate.
             candidate = (
                 not possible_duplicate_detection
                 and (
@@ -190,7 +221,6 @@ def analyze_collision_candidates(
                 )
             )
 
-
             records.append({
                 "frame": int(frame_number),
                 "track_id_a": track_a,
@@ -199,14 +229,18 @@ def analyze_collision_candidates(
                 "class_b": second["class_name"],
                 "center_distance_px": center_distance,
                 "normalized_center_distance": normalized_distance,
+                "relative_center_distance": relative_center_distance,
                 "bbox_iou": iou,
                 "closing_speed_px_per_sec": closing_speed,
                 "is_close": bool(is_close),
                 "boxes_overlap": bool(boxes_overlap),
                 "is_closing": bool(closing),
+                "strong_overlap": bool(strong_overlap),
+                "possible_duplicate_detection": bool(
+                    possible_duplicate_detection
+                ),
                 "candidate_score": score,
                 "potential_collision_candidate": bool(candidate),
-                "possible_duplicate_detection": bool(possible_duplicate_detection),
             })
 
     return pd.DataFrame(records)

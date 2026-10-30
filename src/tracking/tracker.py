@@ -1,12 +1,13 @@
 
 from pathlib import Path
+
 from ultralytics import YOLO
 
 
 class RoadObjectTracker:
     """Track road objects across video frames using ByteTrack."""
 
-    def __init__(self, model_path="yolo11n.pt", tracker="bytetrack.yaml"):
+    def __init__(self, model_path="yolo26n.pt", tracker="bytetrack.yaml"):
         self.model = YOLO(str(Path(model_path)))
         self.tracker = tracker
 
@@ -19,6 +20,7 @@ class RoadObjectTracker:
         output_dir="outputs/detections",
     ):
         """Run persistent multi-object tracking on a video."""
+
         return self.model.track(
             source=str(video_path),
             conf=confidence,
@@ -31,4 +33,8 @@ class RoadObjectTracker:
             name="tracked_video",
             exist_ok=True,
             verbose=False,
+
+            # Suppress highly overlapping detections even when
+            # YOLO assigns different class labels.
+            agnostic_nms=True,
         )
